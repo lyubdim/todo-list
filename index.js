@@ -51,6 +51,72 @@ class Component {
   }
 }
 
+class Task extends Component {
+  constructor({ text, done, idx, onToggle, onDelete }) {
+    super();
+    this.text = text;
+    this.done = done;
+    this.idx = idx;
+    this.onToggle = onToggle;
+    this.onDelete = onDelete;
+  }
+  render() {
+    return createElement('li', {}, [
+      createElement(
+          'input',
+          { type: 'checkbox', checked: this.done },
+          null,
+          { change: e => this.onToggle(this.idx, e) }
+      ),
+      createElement(
+          'label',
+          { style: `color: ${this.done ? 'grey' : 'black'}` },
+          this.text
+      ),
+      createElement(
+          'button',
+          {},
+          '🗑️',
+          { click: () => this.onDelete(this.idx) }
+      )
+    ]);
+  }
+}
+
+class AddTask extends Component {
+  constructor(onAddTask, onInputChange, value) {
+    super();
+    this.onAddTask = onAddTask;
+    this.onInputChange = onInputChange;
+    this.value = value;
+  }
+  render() {
+    return createElement(
+        'div',
+        { class: 'add-todo' },
+        [
+          createElement(
+              'input',
+              {
+                id: 'new-todo',
+                type: 'text',
+                placeholder: 'Задание',
+                value: this.value
+              },
+              null,
+              { input: this.onInputChange }
+          ),
+          createElement(
+              'button',
+              { id: 'add-btn' },
+              '+',
+              { click: this.onAddTask }
+          )
+        ]
+    );
+  }
+}
+
 class TodoList extends Component {
   constructor() {
     super();
@@ -65,52 +131,27 @@ class TodoList extends Component {
   }
 
   render() {
-    this.inputElement = createElement(
-      'input',
-      {
-        id: 'new-todo',
-        type: 'text',
-        placeholder: 'Задание',
-        value: this.state.newTodo
-      },
-      null,
-      { input: this.onAddInputChange.bind(this) }
+    const addTaskNode = new AddTask(
+        this.onAddTask.bind(this),
+        this.onAddInputChange.bind(this),
+        this.state.newTodo
+    ).getDomNode();
+    
+    const tasksNodes = this.state.todos.map((todo, idx) =>
+        new Task({
+          text: todo.text,
+          done: todo.done,
+          idx,
+          onToggle: this.onToggleTask.bind(this),
+          onDelete: this.deleteTask.bind(this)
+        }).getDomNode()
     );
-    this.addBtn = createElement(
-      'button',
-      { id: 'add-btn' },
-      '+',
-      { click: this.onAddTask.bind(this) }
-    );
-
-    this.listElement = createElement(
-      'ul',
-      { id: 'todos' },
-      this.state.todos.map((todo, idx) =>
-        createElement('li', {}, [
-          createElement('input',
-            { type: 'checkbox', checked: todo.done },
-            null,
-            { change: this.onToggleTask.bind(this, idx) }
-          ),
-          createElement('label',
-            { style: `color: ${todo.done ? 'grey' : 'black'}` },
-            todo.text
-          ),
-          createElement('button', {}, '🗑️', {
-            click: this.deleteTask.bind(this, idx)
-          })
-        ])
-      )
-    );
-
+    const listNode = createElement('ul', { id: 'todos' }, tasksNodes);
+    
     return createElement('div', { class: 'todo-list' }, [
       createElement('h1', {}, 'TODO List'),
-      createElement('div', { class: 'add-todo' }, [
-        this.inputElement,
-        this.addBtn
-      ]),
-      this.listElement
+      addTaskNode,
+      listNode
     ]);
   }
 
@@ -122,7 +163,6 @@ class TodoList extends Component {
     event.preventDefault();
     const text = this.state.newTodo.trim();
     if (!text) return;
-
     this.state.todos.push({ text, done: false });
     this.state.newTodo = '';
     this.update();
@@ -142,3 +182,5 @@ class TodoList extends Component {
 document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(new TodoList().getDomNode());
 });
+
+
