@@ -25,8 +25,7 @@
 }
 
 class Component {
-  constructor() {
-  }
+  constructor() {}
 
   getDomNode() {
     this._domNode = this.render();
@@ -35,38 +34,37 @@ class Component {
 }
 
 class TodoList extends Component {
+  constructor() {
+    super();
+    this.state = {
+      todos: ['Сделать домашку', 'Сделать практику', 'Пойти домой'],
+    };
+  }
+
   render() {
-    return createElement("div", { class: "todo-list" }, [
-      createElement("h1", {}, "TODO List"),
-      createElement("div", { class: "add-todo" }, [
-        createElement("input", {
-          id: "new-todo",
-          type: "text",
-          placeholder: "Задание",
+    return createElement('div', { class: 'todo-list' }, [
+      createElement('h1', {}, 'TODO List'),
+      createElement('div', { class: 'add-todo' }, [
+        createElement('input', {
+          id: 'new-todo',
+          type: 'text',
+          placeholder: 'Задание'
         }),
-        createElement("button", { id: "add-btn" }, "+"),
+        createElement('button', { id: 'add-btn' }, '+')
       ]),
-      createElement("ul", { id: "todos" }, [
-        createElement("li", {}, [
-          createElement("input", { type: "checkbox" }),
-          createElement("label", {}, "Сделать домашку"),
-          createElement("button", {}, "🗑️")
-        ]),
-        createElement("li", {}, [
-          createElement("input", { type: "checkbox" }),
-          createElement("label", {}, "Сделать практику"),
-          createElement("button", {}, "🗑️")
-        ]),
-        createElement("li", {}, [
-          createElement("input", { type: "checkbox" }),
-          createElement("label", {}, "Пойти домой"),
-          createElement("button", {}, "🗑️")
-        ]),
-      ]),
+      createElement('ul', { id: 'todos' },
+          this.state.todos.map(todo =>
+              createElement('li', {}, [
+                createElement('input', { type: 'checkbox' }),
+                createElement('label', {}, todo),
+                createElement('button', {}, '🗑️')
+              ])
+          )
+      )
     ]);
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(new TodoList().getDomNode());
 });
