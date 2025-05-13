@@ -32,11 +32,19 @@
 }
 
 class Component {
-  constructor() {}
+  constructor() {
+    this._domNode = null;
+  }
 
   getDomNode() {
     this._domNode = this.render();
     return this._domNode;
+  }
+
+  update() {
+    const newDom = this.render();
+    this._domNode.replaceWith(newDom);
+    this._domNode = newDom;
   }
 }
 
@@ -50,20 +58,27 @@ class TodoList extends Component {
   }
 
   render() {
-    return createElement('div', { class: 'todo-list' }, [
+    const root = createElement('div', { class: 'todo-list' }, [
       createElement('h1', {}, 'TODO List'),
       createElement('div', { class: 'add-todo' }, [
-        createElement('input', {
-          id: 'new-todo',
-          type: 'text',
-          placeholder: 'Задание'
-        },null, 
-      { input: this.onAddInputChange.bind(this) }),
-
-
-        createElement('button', { id: 'add-btn' }, '+', { click: this.onAddTask.bind(this) })
+        createElement(
+            'input',
+            {
+              id: 'new-todo',
+              type: 'text',
+              placeholder: 'Задание',
+              value: this.state.newTodo
+            },
+            null,
+            { input: this.onAddInputChange.bind(this) }
+        ),
+        createElement('button', { id: 'add-btn' }, '+', {
+          click: this.onAddTask.bind(this)
+        })
       ]),
-      createElement('ul', { id: 'todos' },
+      createElement(
+          'ul',
+          { id: 'todos' },
           this.state.todos.map(todo =>
               createElement('li', {}, [
                 createElement('input', { type: 'checkbox' }),
@@ -73,22 +88,20 @@ class TodoList extends Component {
           )
       )
     ]);
-  }
-  onAddTask(event) {
-    const text = this.state.newTodo.trim();
-    this.state.todos.push(text);
-    this.state.newTodo = '';
 
-    this.inputElement.value = '';
-
-    this.listElement.innerHTML = '';
-    this.state.todos.forEach(todoText => {
-      this.listElement.appendChild(this.createTodoItem(todoText));
-    });
+    return root;
   }
 
   onAddInputChange(event) {
     this.state.newTodo = event.target.value;
+  }
+
+  onAddTask() {
+    const text = this.state.newTodo.trim();
+    if (!text) return;                
+    this.state.todos.push(text);      
+    this.state.newTodo = '';           
+    this.update();                    
   }
 }
 
