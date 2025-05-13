@@ -51,7 +51,7 @@ class Component {
   }
 }
 
-class Task extends Component {
+ class Task extends Component {
   constructor({ text, done, idx, onToggle, onDelete }) {
     super();
     this.text = text;
@@ -59,29 +59,47 @@ class Task extends Component {
     this.idx = idx;
     this.onToggle = onToggle;
     this.onDelete = onDelete;
+    this.confirmDelete = false;
   }
+
   render() {
-    return createElement('li', {}, [
-      createElement(
-          'input',
-          { type: 'checkbox', checked: this.done },
-          null,
-          { change: e => this.onToggle(this.idx, e) }
-      ),
-      createElement(
-          'label',
-          { style: `color: ${this.done ? 'grey' : 'black'}` },
-          this.text
-      ),
-      createElement(
-          'button',
-          {},
-          '🗑️',
-          { click: () => this.onDelete(this.idx) }
-      )
-    ]);
+    const checkbox = createElement(
+        'input',
+        { type: 'checkbox', checked: this.done },
+        null,
+        { change: e => this.onToggle(this.idx, e) }
+    );
+    const label = createElement(
+        'label',
+        { style: `color: ${this.done ? 'grey' : 'black'}` },
+        this.text
+    );
+    
+    const btnAttrs = {};
+    if (this.confirmDelete) {
+      btnAttrs.style = 'background-color: red;'; 
+    }
+
+    const deleteBtn = createElement(
+        'button',
+        btnAttrs,
+        '🗑️',
+        { click: this._onDeleteClick.bind(this) }
+    );
+
+    return createElement('li', {}, [ checkbox, label, deleteBtn ]);
+  }
+
+  _onDeleteClick() {
+    if (!this.confirmDelete) {
+      this.confirmDelete = true;
+      this.update();
+    } else {
+      this.onDelete(this.idx);
+    }
   }
 }
+
 
 class AddTask extends Component {
   constructor(onAddTask, onInputChange, value) {
@@ -176,6 +194,15 @@ class TodoList extends Component {
   deleteTask(idx) {
     this.state.todos.splice(idx, 1);
     this.update();
+  }
+
+  handleDeleteClick() {
+    if (!this.confirmDelete) {
+      this.confirmDelete = true;
+      this.update();
+    } else {
+      this.deleteTask(this.idx);
+    }
   }
 }
 
