@@ -3,7 +3,11 @@
 
   if (attributes) {
     Object.keys(attributes).forEach((key) => {
-      element.setAttribute(key, attributes[key]);
+      if (key === 'checked' || key === 'value') {
+        element[key] = attributes[key];
+      } else {
+        element.setAttribute(key, attributes[key]);
+      }
     });
   }
 
@@ -20,7 +24,6 @@
   } else if (children instanceof HTMLElement) {
     element.appendChild(children);
   }
-
 
   if (callbacks) {
     Object.keys(callbacks).forEach((eventName) => {
@@ -52,56 +55,87 @@ class TodoList extends Component {
   constructor() {
     super();
     this.state = {
-      todos: ['Сделать домашку', 'Сделать практику', 'Пойти домой'],
+      todos: [
+        { text: 'Сделать домашку', done: false },
+        { text: 'Сделать практику', done: false },
+        { text: 'Пойти домой',    done: false },
+      ],
       newTodo: '',
     };
   }
 
   render() {
-    const root = createElement('div', { class: 'todo-list' }, [
+    this.inputElement = createElement(
+      'input',
+      {
+        id: 'new-todo',
+        type: 'text',
+        placeholder: 'Задание',
+        value: this.state.newTodo
+      },
+      null,
+      { input: this.onAddInputChange.bind(this) }
+    );
+    this.addBtn = createElement(
+      'button',
+      { id: 'add-btn' },
+      '+',
+      { click: this.onAddTask.bind(this) }
+    );
+
+    this.listElement = createElement(
+      'ul',
+      { id: 'todos' },
+      this.state.todos.map((todo, idx) =>
+        createElement('li', {}, [
+          createElement('input',
+            { type: 'checkbox', checked: todo.done },
+            null,
+            { change: this.onToggleTask.bind(this, idx) }
+          ),
+          createElement('label',
+            { style: `color: ${todo.done ? 'grey' : 'black'}` },
+            todo.text
+          ),
+          createElement('button', {}, '🗑️', {
+            click: this.deleteTask.bind(this, idx)
+          })
+        ])
+      )
+    );
+
+    return createElement('div', { class: 'todo-list' }, [
       createElement('h1', {}, 'TODO List'),
       createElement('div', { class: 'add-todo' }, [
-        createElement(
-            'input',
-            {
-              id: 'new-todo',
-              type: 'text',
-              placeholder: 'Задание',
-              value: this.state.newTodo
-            },
-            null,
-            { input: this.onAddInputChange.bind(this) }
-        ),
-        createElement('button', { id: 'add-btn' }, '+', {
-          click: this.onAddTask.bind(this)
-        })
+        this.inputElement,
+        this.addBtn
       ]),
-      createElement(
-          'ul',
-          { id: 'todos' },
-          this.state.todos.map(todo =>
-              createElement('li', {}, [
-                createElement('input', { type: 'checkbox' }),
-                createElement('label', {}, todo),
-                createElement('button', {}, '🗑️')
-              ])
-          )
-      )
+      this.listElement
     ]);
-
-    return root;
   }
 
   onAddInputChange(event) {
     this.state.newTodo = event.target.value;
   }
 
-  onAddTask() {
+  onAddTask(event) {
+    event.preventDefault();
     const text = this.state.newTodo.trim();
-    if (!text) return;                
-    this.state.todos.push(text);      
-    this.state.newTodo = '';           
-    this.update();                    
+    if (!text) return;
+
+    this.state.todos.push({ text, done: false });
+    this.state.newTodo = '';
+    this.update();
+  }
+
+  onToggleTask(idx, event) {
+    this.state.todos[idx].done = event.target.checked;
+    this.update();
+  }
+
+  deleteTask(idx) {
+    this.state.todos.splice(idx, 1);
+    this.update();
   }
 }
 
